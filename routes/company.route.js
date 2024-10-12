@@ -98,18 +98,27 @@ router.get('/bill', async (req, res) => {
                 }
             },
             {
-                $project: {
-                    _id: "$_id.company_id",
-                    month: "$_id.month",
-                    company_name: 1,
-                    office_rent_fee: 1,
-                    total_service_fee: 1,
-                    total_monthly_cost: 1
+                $group: {
+                    _id: {
+                        company_id: "$_id.company_id",
+                        company_name: "$company_name",
+                    },
+                    fee_details:{ $push: {
+                            month: "$_id.month",
+                            office_rent_fee: "$office_rent_fee" ,
+                            total_service_fee: "$total_service_fee",
+                            total_monthly_cost: "$total_monthly_cost"
+                        }}
                 }
             },
             {
-                $sort: { total_monthly_cost: -1 }
-            }
+                $project: {
+                    _id: "$_id.company_id",
+                    company_name: "$_id.company_name",
+                    fee_details: 1,
+                }
+            },
+            { "$sort": { "fee_details.total_monthly_cost": -1 }}
         ]);
         res.json(companies);
     } catch (error) {
